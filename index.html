@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>关卡</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .box{
+            width: 60%;
+            margin: 10px 10px;
+            line-height: 60px;
+        }
+        #Checkpoint{
+            display: block;
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            font-size: 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #000;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>见缝插针小游戏</h2>
+    <a href="./play.html" id="Checkpoint">
+        关卡<span id="num">1</span>
+    </a>
+</div>
+
+</body>
+<script>
+    var num = document.getElementById("num");
+    var check = document.getElementById("Checkpoint");
+    var level = parseInt(window.location.href.split("#")[1]);
+    if (level){
+        if (level == 7){
+            level = 0;
+        }
+        num.innerHTML = level+1;
+        check.setAttribute("href","./play.html#"+level);
+    }
+</script>
+</html>

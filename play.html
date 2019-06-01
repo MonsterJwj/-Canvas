@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>游戏</title>
+</head>
+<body>
+<canvas id="canvas" width="800" height="800" style="border: 1px solid purple"></canvas>
+</body>
+<script>
+    //创建canvas对象
+    var canvas = document.getElementById("canvas");
+    var cxt = canvas.getContext("2d");
+
+    var level;  //保存关卡
+
+    var circularX = 300;  //大圆的水平位置
+    var circularY = 230;  //大圆的垂直位置
+    var radius = 50;      //大圆的半径
+
+    //********************初始化关卡数据*******************
+    var levelArrray = [
+        {initBall:3,waitBall:5,speed:180},
+        {initBall:4,waitBall:6,speed:160},
+        {initBall:4,waitBall:6,speed:130},
+        {initBall:5,waitBall:6,speed:120},
+        {initBall:5,waitBall:6,speed:100},
+        {initBall:6,waitBall:6,speed:100},
+        {initBall:6,waitBall:8,speed:90}
+    ];
+
+    //跳转页面href后面的关卡数
+    var lev = parseInt(window.location.href.split("#")[1]);
+    if (lev){
+        level = lev;
+    }else {
+        level = 0;
+    }
+
+    //*********************设置转动球*******************
+    var balls = [];  //存放转动球
+    var balllen = levelArrray[level].initBall;  //设置转动球数组的长度
+    var lineLength = 150; //设置线段的长度
+    //为数组添加旋转角度（设置转动球的角度）
+    for (var i=0;i<balllen;i++){
+        var angle = (360/balllen)*(i+1);  //第一个球 360/3*1 = 120度  第二个 360/3*2 = 240 第三个球 360/3*3 = 360
+        balls.push({angle:angle,numStr:""});  //将转动球的数据保存在balls数组里，numStr是保存等待球插到大圆上时，等待球上的数字
+    }
+
+    var ballRadius = 12;  //转动球的半径
+
+    //************************设置等待球***********************
+    var waitBalls = [];
+    var waitLen = levelArrray[level].waitBall;
+    var ballLength = 265;
+    for (var j=waitLen;j>0;j--){
+        waitBalls.push({angle:"",numStr:j});
+    }
+    //绘制等待球的圆心
+    var waitballX = circularX;
+    var waitballY = ballLength + circularY;
+
+    //************************绘制大圆********************
+    function bigCircular() {
+        cxt.save();
+        cxt.beginPath();
+        cxt.arc(circularX,circularY,radius,0,Math.PI*2,false);
+        cxt.fillStyle = "purple";
+        cxt.fill();
+        cxt.closePath();
+        cxt.stroke();
+
+        //填充文字
+        //当level等于关卡数的长度时，就让level等于0，返回第一关
+        if (level === levelArrray.length-1){
+            level = 0;
+        }
+        var text =level+1;
+        cxt.font = "80px 楷体";
+        cxt.fillStyle = "yellow";
+        cxt.strokeStyle = "#fff";
+        cxt.textAlign = "center";
+        cxt.textBaseline = "middle";
+        cxt.fillText(text,circularX,circularY);
+        cxt.strokeText(text,circularX,circularY);
+        cxt.restore();
+    }
+
+    //**********************绘制转动球******************
+    function turningBall(deg) {
+        balls.forEach(function (e) {
+            cxt.save();
+            cxt.globalCompositeOperation = "destination-over";  //图形组合
+            //每次让球旋转本身角度+所给的角度，如果角度大于360度，就让角度重新从0度开始
+            e.angle = e.angle + deg;
+            if (e.angle>=360){
+                e.angle = 0;
+            }
+            //绘制线段
+            cxt.moveTo(circularX,circularY);
+            var rad = 2 * Math.PI * e.angle/360;  //转换成角度
+            //三角函数
+            var x = circularX+lineLength*Math.cos(rad);
+            var y =circularY+lineLength*Math.sin(rad);
+            cxt.strokeStyle = "purple";
+            cxt.lineTo(x,y);
+            cxt.stroke();
+            cxt.restore();
+
+            //绘制转动球
+            cxt.beginPath();
+            cxt.arc(x,y,ballRadius,0,Math.PI*2,false);
+            cxt.fillStyle = "yellow";
+            cxt.fill();
+            cxt.closePath();
+
+            //绘制转动球上数字
+            if (e.numStr!=""){
+                cxt.textAlign = "center";
+                cxt.textBaseline = "middle";
+                cxt.fillStyle = "#000";
+                cxt.font = "15px 楷体";
+                cxt.fillText(e.numStr,x,y);
+                cxt.stroke();
+            }
+        });
+    }
+
+    //***********************绘制等待球*******************
+    function waitBall() {
+        cxt.clearRect(0,400,800,400);
+        waitBalls.forEach(function (e) {
+            cxt.beginPath();
+            cxt.arc(waitballX,waitballY,ballRadius,0,Math.PI*2,false);
+            cxt.closePath();
+            cxt.fillStyle = "yellow";
+            cxt.fill();
+            cxt.stroke();
+
+            //绘制等待球上的数字
+            cxt.textAlign = "center";
+            cxt.textBaseline = "middle";
+            cxt.fillStyle = "#000";
+            cxt.font = "15px 楷体";
+            cxt.fillText(e.numStr,waitballX,waitballY);
+            waitballY += 3 * ballRadius;
+        });
+    }
+
+    //*********************初始化页面********************
+    function initBalls(deg) {
+        cxt.clearRect(0,0,800,800);
+        bigCircular();
+        turningBall(deg);
+        waitBall();
+    }
+    initBalls(0);
+
+    //**********************设置旋转角度****************
+    setInterval(function(){
+        cxt.clearRect(0,0,800,400);
+        bigCircular();
+        turningBall(10);
+    },levelArrray[level].speed);
+
+    //*********************点击页面任意地方，发送小球***************
+    var state;  //用来存储成功或失败的状态
+    document.onclick = function () {
+        if (waitBalls.length == 0){
+            return;
+        }
+        waitballY = lineLength + 300;  //等待球距大圆圆心的位置
+        waitBall();
+
+        var ball = waitBalls.shift();  //移出顶部的等待球，并返回值
+        ball.angle = 90; //设置移出等待球的角度
+        var faild = true;  //成功或失败跳出循环
+
+        //判断是否闯关成功 e:对象 index:下标
+        balls.forEach(function (e,index) {
+            if (!faild) return;
+            if(Math.abs(e.angle - ball.angle)/2 < 360 * ballRadius/ (lineLength * Math.PI)) {
+                state = 0;
+                faild = false;
+            }else if(index === balls.length - 1 && waitBalls.length === 0) {
+                faild = false;
+                state = 1;
+            }
+        });
+
+        balls.push(ball);  //将移除的小球添加到转动球的数组中
+        //重新绘制等待球
+
+        waitballY = lineLength + ballLength;
+        waitBall();
+        turningBall(0);
+        //跳转页面
+        if(state==0){
+            alert("闯关失败");
+            window.location.href = "index.html#"+level;
+        }else if(state==1){
+            alert("闯关成功");
+            level++;
+            window.location.href = "index.html#"+level;
+        }
+
+    };
+
+
+</script>
+</html>
